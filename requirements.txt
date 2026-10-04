@@ -1,0 +1,17 @@
+# hardware communication
+pyserial
+
+# AI models, data processing and machine learning
+tensorflow
+scikit-learn
+scipy
+numpy
+pandas
+joblib
+
+# data visualization
+matplotlib
+
+# image and pose recognition (keep if your project uses them)
+mediapipe
+opencv-python

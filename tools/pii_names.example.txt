@@ -1,0 +1,20 @@
+# Example format for tools/pii_names.txt
+#
+# Copy this file to tools/pii_names.txt and fill in the strings your project must keep from leaking.
+# pii_names.txt is listed in .gitignore and never enters version control — do not remove that rule.
+#
+# One string per line, matched case-insensitively. Lines starting with # are comments.
+# It is recommended to fill in all of the following categories:
+#
+#   1. Subjects' real names and nicknames (including English nicknames used at recruitment)
+#   2. Folder names chosen when uploading to OpenCap (often different from the EMG file names)
+#   3. Name fragments in raw EMG file names
+#   4. Team members' names (if a member is also a subject, name + the paper's author list can reveal their identity)
+#
+# Examples (fictitious):
+
+WangXiaoMing
+xiaoming
+A-Ming
+WANG_XIAO_MING
+ming_0625_MarkerData

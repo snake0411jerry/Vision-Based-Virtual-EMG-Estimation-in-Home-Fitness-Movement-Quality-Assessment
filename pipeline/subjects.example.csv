@@ -1,0 +1,3 @@
+subject_key,raw_csv,emg_env_csv,trc_dir,age,height_cm,weight_kg,gender,squat_1rm_kg
+S01,SUBJECT01_Raw_DATA.csv,SUBJECT01_CLEAN_SYNCED_Env_60FPS.csv,SUBJECT01_MarkerData,21,175.0,70.0,1,90.0
+S02,SUBJECT02_Raw_DATA.csv,SUBJECT02_CLEAN_SYNCED_Env_60FPS.csv,SUBJECT02_MarkerData,22,160.0,55.0,0,60.0

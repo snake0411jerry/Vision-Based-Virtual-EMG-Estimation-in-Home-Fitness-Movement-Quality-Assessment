@@ -1,0 +1,65 @@
+# =============================================================
+# Personal data (never upload)
+# =============================================================
+# Subjects' age/height/weight/sex/1RM are personal data.
+# Anyone who needs it should create it with the columns of pipeline/subjects.example.csv.
+subjects.csv
+**/subjects.csv
+
+# Subject mapping table (S01–S10 ↔ real names); the original is kept in the project root outside the repo.
+# The patterns below intentionally use the table's Chinese file name; do not translate or remove them.
+*對照表*
+**/*對照表*
+
+# List of real names for the PII scan (read by tools/check_no_pii.py)
+tools/pii_names.txt
+
+# =============================================================
+# Dataset (not version-controlled)
+# =============================================================
+# Dataset/ lives outside this repo (about 762MB, contains raw subject signals).
+# Its path is managed by paths.py and can be overridden with the SEMG_DATASET environment variable.
+Dataset/
+**/Dataset/
+
+# videos
+*.mp4
+*.mov
+*.avi
+
+# third-party archives (MTP_Teensy etc., see firmware/README.md)
+*.zip
+
+# =============================================================
+# CSV: none in this English repository (no data is published here)
+# =============================================================
+*.csv
+!**/subjects.example.csv
+
+# =============================================================
+# Model weights and scalers: excluded by default, only the curated ones under models/ are allowed
+# =============================================================
+*.h5
+*.keras
+*.pkl
+!models/**/*.keras
+!models/**/*.pkl
+
+# =============================================================
+# Temporary outputs from runs
+# =============================================================
+results/_cache/
+*.log
+*.b64
+
+# =============================================================
+# Python / editors / environments
+# =============================================================
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.vscode/
+.claude/
+.idea/
