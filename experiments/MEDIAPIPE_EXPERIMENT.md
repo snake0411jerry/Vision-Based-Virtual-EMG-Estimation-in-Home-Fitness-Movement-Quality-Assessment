@@ -550,6 +550,8 @@ Procedure: train the base model on the other 9 people → split each of test sub
 
 #### 🔴 Personalization washes out the benefit of joint two-domain training
 
+> ✅ 2026-10-05: the converged version (150 epochs) confirms this conclusion; the gap shrinks to +0.001, see §9.1g.
+
 | Comparison (testing on MediaPipe, after fine-tuning) | Diff | p across seeds | p across subjects |
 |---|---|---|---|
 | `both` − `mp_only` | **+0.0033** | 0.28 | 0.55 |
@@ -778,6 +780,48 @@ at 150 epochs 83% of folds are still rising, but close to a plateau.
 **Implication for the paper:** slide 22's personalization gain was under-reported. After convergence, zero-shot 0.79 → fine-tuned 0.885,
 close to the single-person upper bound of 0.895 (`exp_b_single_subject`, a different run, so only the general direction is meaningful).
 The submission should report the converged version, stating that the epoch count was fixed in advance based on “the curve flattening”.
+
+### 9.1g Base model mp_only vs both, converged version (completed 2026-10-05 18:55)
+
+`experiments/run_base_converge.ps1`: base models `both` / `mp_only` in the same execution,
+fine-tuned on phone data only (`ft_src=mediapipe`, the deployment scenario), 150 epochs without early stopping, 3 seeds.
+It answers the question left open by §9.1b: does “personalization washes out the benefit of joint two-domain training” still hold after convergence?
+
+#### Testing on MediaPipe (deployment scenario)
+
+| Base model | Zero-shot r | **r after fine-tuning (150 ep)** | nRMSE after fine-tuning |
+|---|---|---|---|
+| `both` | 0.7700 ± 0.0053 | **0.8716 ± 0.0007** | 0.5238 |
+| `mp_only` | 0.7561 ± 0.0027 | **0.8702 ± 0.0040** | 0.5226 |
+| Diff (both − mp_only) | +0.0139 (p=0.024 / 0.22) | **+0.0014 (p=0.66 / 0.52)** | +0.0013 (p=0.85) |
+
+(p-values are “across seeds n=3 / across subjects n=10”.)
+
+**The conclusion holds, and more clearly:** the longer the fine-tuning, the **steadily smaller** the gap between the two:
+
+| epoch | 1 | 20 | 50 | 100 | 150 |
+|---|---|---|---|---|---|
+| both − mp_only | +0.014 | +0.008 | +0.005 | +0.002 | **+0.001** |
+
+Per-person differences range from −0.009 to +0.010, with both better for 6 of 10 people — pure noise.
+Synergist r (+0.004, p=0.40) and nRMSE show no difference either.
+
+**Practical meaning (strengthening §9.1b):** as long as the deployment flow includes a personalization calibration,
+**a pipeline that uses phone data only (`mp_only`) reaches 0.870**, indistinguishable from the 0.872 obtained by adding OpenCap multi-camera data.
+Data collection does not need multi-camera equipment (training still needs EMG for labels).
+(Note: this cannot be written as “the two are the same”; that would require an equivalence test (TOST).)
+
+⚠️ The one exception: if the same model must also accept **OpenCap input**, the `mp_only` base model is clearly worse
+(testing on OpenCap: 0.777 vs 0.845, both better for 10/10 people). Phone-only deployment is unaffected.
+
+#### Convergence and cross-run consistency
+
+- The mean curve is still rising at 150 epochs, but only by +0.004 per 25 epochs (both) / +0.004 (mp_only),
+  and the two lines rise **in parallel** — the gap has been stable at +0.001 to +0.002 since 100 epochs.
+  About half the folds (45% / 48%) have their best epoch before 150; they are close to a plateau.
+- `both` at epoch 100 is 0.8626, only 0.002 away from §9.1e's 0.8603 (a different run, 100 epochs),
+  far smaller than the cross-run dispersion of 0.025 — **the result replicates**.
+- The latest number for the deployment scenario: **0.872** (150 epochs), above §9.1e's 0.860 (100 epochs).
 
 ### 9.2 Lowering MediaPipe's noise floor — not something code can solve
 
