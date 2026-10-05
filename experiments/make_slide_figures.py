@@ -66,7 +66,7 @@ for ax, s in zip(axes, picks):
     tag = 'largest improvement' if s == 'S08' else 'r did not improve, but nRMSE did'
     ax.set_title(f"{s} ({tag})    r {rz:.2f} → {rf:.2f}    nRMSE {nz:.2f} → {nf:.2f}",
                  fontweight='bold')
-    ax.set_ylabel('Synergist %MVC')
+    ax.set_ylabel('Synergist muscle activation')
     ax.grid(alpha=.22)
 axes[0].legend(loc='upper right', ncol=3, framealpha=.95)
 axes[1].set_xlabel('Time (s)')

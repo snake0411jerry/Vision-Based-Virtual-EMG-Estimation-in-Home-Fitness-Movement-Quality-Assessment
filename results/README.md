@@ -173,6 +173,7 @@ Figures marked “not included” need a full training run to redraw; run the li
 > ⚠️ Also, `EMG_*_MVC` itself is **not a true %MVC** (this project has no MVC recordings);
 > it is normalized to the maximum activation observed for that subject, and ×100 only changes the scale, not the meaning.
 > Figure axes / captions must not be labelled “%MVC”; see item 6 of the [root README](../README.md#-read-before-citing-numbers) for details.
+> ✅ The plotting programs now label these axes “muscle activation”, and all figures in this repository use that label.
 
 ---
 

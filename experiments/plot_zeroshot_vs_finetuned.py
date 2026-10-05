@@ -179,7 +179,7 @@ def main():
             ax.set_title(f"{r['subject']}    r {rz:.3f} → {rf:.3f} ({rf-rz:+.3f})   "
                          f"nRMSE {nz:.3f} → {nf:.3f}", fontsize=9.5)
             ax.set_xlabel('Time (s, segment tails joined)', fontsize=8)
-            ax.set_ylabel('%MVC', fontsize=8)
+            ax.set_ylabel('Muscle activation', fontsize=8)
             ax.tick_params(labelsize=7); ax.grid(alpha=0.2)
             if k == 0:
                 ax.legend(fontsize=7.5, loc='upper right', ncol=3)

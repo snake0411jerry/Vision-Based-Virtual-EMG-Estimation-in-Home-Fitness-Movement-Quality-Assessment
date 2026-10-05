@@ -50,7 +50,7 @@ PICKS = ['S01', 'S09', 'S10']
 LABELS = {
     'S01': 'Normal signal quality (control)',
     'S09': 'Synergist suspected of poor electrode contact',
-    'S10': 'Genuinely low activation (normal signal, only 14.2 %MVC)',
+    'S10': 'Genuinely low activation (normal signal, mean only 14.2% of personal max)',
 }
 MUSCLE = ['Main muscle (Main)', 'Synergist (Synergist)']
 C_TRUE, C_ZS, C_FT = '#15181a', '#e0623c', '#0f766e'
@@ -93,7 +93,7 @@ def main():
             ax.set_title(f"{s} — {LABELS[s]}    "
                          f"r {rz:.3f} → {rf:.3f}    nRMSE {nz:.3f} → {nf:.3f}",
                          fontweight='bold')
-            ax.set_ylabel('%MVC')
+            ax.set_ylabel('Muscle activation')
             ax.grid(alpha=.22)
             ax.set_xlim(0, min(MAX_SEC, len(r['y']) / FPS))
         axes[0].legend(loc='upper right', ncol=3, fontsize=9.5, framealpha=.95)
@@ -118,9 +118,9 @@ def main():
             lim = [0, max(yt.max(), yp.max(), yf.max()) * 1.02]
             ax.plot(lim, lim, 'k--', lw=1.1, label='Ideal y=x')
             ax.set_xlim(lim); ax.set_ylim(lim)
-            ax.set_xlabel('Measured %MVC'); ax.set_ylabel('Predicted %MVC')
+            ax.set_xlabel('Measured muscle activation'); ax.set_ylabel('Predicted muscle activation')
             bias = yf.mean() - yt.mean()
-            ax.set_title(f"{s} · {MUSCLE[mi]}\nmean bias after fine-tuning {bias:+.1f} %MVC", fontsize=10.5)
+            ax.set_title(f"{s} · {MUSCLE[mi]}\nmean bias after fine-tuning {bias:+.1f}", fontsize=10.5)
             ax.grid(alpha=.2)
             if mi == 0 and ci == 0:
                 lg = ax.legend(fontsize=8.5, loc='upper left')

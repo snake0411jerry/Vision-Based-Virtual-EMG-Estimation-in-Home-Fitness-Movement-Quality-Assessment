@@ -13,7 +13,7 @@ That is, simply multiplying the ground truth by 0.5 leaves r unchanged to the la
 because it directly proves that "a small synergist amplitude" **alone cannot** cause a low r.
 (MAE shrinks proportionally and nRMSE is unchanged, because the std in the denominator is scaled too.)
 
-So where does S04's r=0.278 come from? A sound physical explanation is **signal-to-noise ratio**:
+So where does S04's low r come from? A sound physical explanation is **signal-to-noise ratio**:
 the weaker the muscle output, the closer the true physiological signal is to the electrode/instrument noise floor,
 the larger the share drowned in noise, and the less of it is predictable. This is the classic
 measurement-error attenuation phenomenon.
@@ -28,7 +28,12 @@ Variant B (scaling + fixed noise floor)        y' = a·y + N(0, σ)
     σ is fixed and does not shrink with a (the noise floor is set by the instrument, independent of output).
     Expected: smaller a → worse SNR → r decreases monotonically.
     Role: test the causal path "low activation → low SNR → low r",
-          and find which (a, σ) reproduces S04's (mean 16.6% MVC, r≈0.278).
+          and find which (a, σ) reproduces S04's (mean activation, zero-shot r).
+
+⚠️ 2026-10-05: the reference points of the real subjects (including S04) are now computed on the fly
+   by real_subject_points() from the current data and LOSO models. The old hard-coded values such as
+   (16.6%, r=0.278) were measured before the MVC denominator fix (2026-08-05) and were on a different
+   scale from the corrected synthetic cases.
 
 [What this experiment can and cannot answer]
 -------------------------------------------------------------------------
@@ -81,7 +86,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = LOSO_MODEL_DIR          # per-fold LOSO models + scalers
 # use subjects with normal activation as "prototypes", reduce them artificially and see whether they degrade to look like S04
 DONOR_SUBJECTS = ['S07', 'S03', 'S08']
-S04_REF = {'mean_mvc_pct': 16.6, 'r_syn': 0.278}
+# reference points of the real subjects are computed by real_subject_points(), not hard-coded (see the 2026-10-05 note in the header)
+REAL_SUBJECTS = ['S04', 'S06', 'S01', 'S05', 'S08', 'S02', 'S03', 'S07']
 
 SCALES = [1.0, 0.7, 0.5, 0.3, 0.2]
 NOISE_SIGMAS = [0.0, 0.02, 0.05]     # in %MVC units (0.02 = 2% MVC)
@@ -92,6 +98,33 @@ CLIP_HI = 1.5
 RNG = np.random.default_rng(42)
 
 
+def real_subject_points(ts_cols, static_cols):
+    """Each real subject's (mean synergist activation ×100, zero-shot synergist r), computed from current data.
+
+    Exactly the same protocol as the synthetic cases: same windows, last frame of the window as the target,
+    predictions from the same loso_without_{S}.keras. Reads no CSV from results/.
+    """
+    out = []
+    for subj in REAL_SUBJECTS:
+        files = sorted(glob.glob(os.path.join(DATA_DIR, f"{subj}_Seg_*_Combined_Features.csv")))
+        base = os.path.join(MODEL_DIR, f'loso_without_{subj}.keras')
+        if not files or not os.path.exists(base):
+            print(f"⚠️ skipping {subj}")
+            continue
+        s_ts = joblib.load(os.path.join(MODEL_DIR, f'loso_scaler_ts_{subj}.pkl'))
+        s_st = joblib.load(os.path.join(MODEL_DIR, f'loso_scaler_static_{subj}.pkl'))
+        dfs = [pd.read_csv(f) for f in files]
+        X, S, Y, _ = make_windows(dfs, ts_cols, static_cols, LABEL_EMG_COLS,
+                                  None, WINDOW_SIZE, STEP_SIZE, s_ts, s_st)
+        model = tf.keras.models.load_model(base)
+        pred = model.predict({'ts_input': X, 'static_input': S}, verbose=0)
+        pred = pred[0] if isinstance(pred, list) else pred
+        tf.keras.backend.clear_session()
+        r = float(np.corrcoef(Y[:, SYN_IDX], pred[:, SYN_IDX])[0, 1])
+        out.append({'subj': subj, 'mvc': float(Y[:, SYN_IDX].mean() * 100), 'r': r})
+    return pd.DataFrame(out)
+
+
 def main():
     for f in ['Microsoft JhengHei', 'SimHei', 'Arial Unicode MS']:
         matplotlib.rcParams['font.sans-serif'] = [f]
@@ -100,6 +133,12 @@ def main():
 
     spec = joblib.load(os.path.join(MODEL_DIR, 'feature_spec.pkl'))
     ts_cols, static_cols = spec['ts_cols'], spec['static_cols']
+
+    real = real_subject_points(ts_cols, static_cols)
+    s04 = real.set_index('subj').loc['S04']
+    S04_REF = {'mean_mvc_pct': s04['mvc'], 'r_syn': s04['r']}
+    print('Real-subject reference points (current data):')
+    print(real.round(3).to_string(index=False))
 
     rows = []
     for subj in DONOR_SUBJECTS:
@@ -163,7 +202,7 @@ def main():
               f" | mean %MVC dropped from {d['mean_mvc_pct'].max():.1f} to {d['mean_mvc_pct'].min():.1f}")
     print("  → amplitude reduced to 1/5 and r barely moves: proof that low amplitude by itself does not lower r.")
 
-    print("\n[Variant B, scaling + noise] Can it reproduce S04's (16.6%MVC, r=0.278)?")
+    print(f"\n[Variant B, scaling + noise] Can it reproduce S04's (mean activation {S04_REF['mean_mvc_pct']:.1f}, r={S04_REF['r_syn']:.3f})?")
     b = df[df['sigma'] > 0].copy()
     b['dist'] = ((b['mean_mvc_pct'] - S04_REF['mean_mvc_pct']) / 10) ** 2 + \
                 (b['r_syn'] - S04_REF['r_syn']) ** 2
@@ -178,16 +217,12 @@ def main():
         d = d.sort_values('scale_a')
         ls = '--' if var.startswith('A') else '-'
         ax.plot(d['scale_a'], d['r_syn'], marker='o', ms=4, ls=ls, label=f"{subj} {var}", alpha=0.8)
-    ax.axhline(S04_REF['r_syn'], color='crimson', lw=1.6, ls=':', label=f"S04 measured r={S04_REF['r_syn']}")
+    ax.axhline(S04_REF['r_syn'], color='crimson', lw=1.6, ls=':', label=f"S04 measured r={S04_REF['r_syn']:.3f}")
     ax.set_xlabel('Amplitude scaling factor a'); ax.set_ylabel('Synergist Pearson r')
     ax.set_title('Variant A (dashed, r unchanged) vs variant B (solid, r falls with SNR)')
     ax.invert_xaxis(); ax.grid(alpha=0.25); ax.legend(fontsize=6.5, ncol=2)
 
     ax = axes[1]
-    real = pd.DataFrame({
-        'subj': ['S04', 'S06', 'S01', 'S05', 'S08', 'S02', 'S03', 'S07'],
-        'mvc': [16.6, 19.9, 21.6, 21.9, 22.4, 23.6, 25.5, 27.3],
-        'r': [0.278, 0.449, 0.412, 0.602, 0.765, 0.532, 0.709, 0.444]})
     bb = df[df['sigma'] > 0]
     ax.scatter(bb['mean_mvc_pct'], bb['r_syn'], s=26, alpha=0.45, label='Synthetic cases (variant B)')
     ax.scatter(real['mvc'], real['r'], s=95, marker='*', color='crimson',
@@ -195,7 +230,7 @@ def main():
     for _, rr in real.iterrows():
         ax.annotate(rr['subj'], (rr['mvc'], rr['r']), fontsize=7,
                     xytext=(3, 3), textcoords='offset points')
-    ax.set_xlabel('Mean synergist %MVC'); ax.set_ylabel('Synergist Pearson r')
+    ax.set_xlabel('Mean synergist muscle activation'); ax.set_ylabel('Synergist Pearson r')
     ax.set_title('Synthetic cases vs actual subjects')
     ax.grid(alpha=0.25); ax.legend(fontsize=8)
 

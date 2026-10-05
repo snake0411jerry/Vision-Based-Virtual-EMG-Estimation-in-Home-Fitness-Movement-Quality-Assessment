@@ -221,7 +221,7 @@ def main():
                 rr = np.corrcoef(r['yt'][:, mi], r['yp'][:, mi])[0, 1]
                 ax.set_title(f"{s}  Seg{r['seg']} ({r['trc']})   r={rr:.3f}", fontsize=9)
                 ax.set_xlabel('Time (s)', fontsize=8)
-                ax.set_ylabel('%MVC', fontsize=8)
+                ax.set_ylabel('Muscle activation', fontsize=8)
                 ax.tick_params(labelsize=7)
                 ax.grid(alpha=0.2)
                 if si == 0 and ci == 0:
@@ -241,7 +241,7 @@ def main():
         ax.scatter(allt[:, mi], allp[:, mi], s=2, alpha=0.06, color='#0f766e')
         lim = [0, max(allt[:, mi].max(), allp[:, mi].max()) * 1.02]
         ax.plot(lim, lim, 'k--', lw=1, label='Ideal y=x')
-        ax.set_xlabel('Measured %MVC'); ax.set_ylabel('Predicted %MVC')
+        ax.set_xlabel('Measured muscle activation'); ax.set_ylabel('Predicted muscle activation')
         ax.set_title(f"{mname}  r={ov['r'][mi]:.3f}  nRMSE={ov['nrmse'][mi]:.3f}", fontsize=10)
         ax.legend(fontsize=8); ax.grid(alpha=0.2)
 
@@ -250,7 +250,7 @@ def main():
         ax.hist(err, bins=80, color='#0f766e', alpha=0.75)
         ax.axvline(0, color='k', ls='--', lw=1)
         ax.axvline(err.mean(), color='crimson', lw=1.5, label=f'mean bias {err.mean():+.3f}')
-        ax.set_xlabel('Predicted − measured (%MVC)'); ax.set_ylabel('Frames')
+        ax.set_xlabel('Predicted − measured (muscle activation)'); ax.set_ylabel('Frames')
         ax.set_title(f'{mname} error distribution', fontsize=10)
         ax.legend(fontsize=8); ax.grid(alpha=0.2)
     fig.suptitle('Overall prediction quality on the _two validation sets', fontsize=13)

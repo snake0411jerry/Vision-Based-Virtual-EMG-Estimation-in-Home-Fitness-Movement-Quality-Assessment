@@ -204,7 +204,7 @@ def main():
                 rf = np.corrcoef(r['y'][:, mi], r['ft'][:, mi])[0, 1]
                 ax.set_title(f"{s} · Seg{r['seg']} ({r['trc']})   r {rz:.3f} → {rf:.3f}",
                              fontsize=9.5)
-                ax.set_ylabel('%MVC', fontsize=8.5)
+                ax.set_ylabel('Muscle activation', fontsize=8.5)
                 ax.tick_params(labelsize=7.5)
                 ax.grid(alpha=.22)
                 if si == len(subjects) - 1:
