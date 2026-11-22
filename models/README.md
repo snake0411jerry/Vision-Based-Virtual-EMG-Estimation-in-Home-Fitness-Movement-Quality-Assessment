@@ -11,6 +11,7 @@ Path constants are all defined in [`paths.py`](../paths.py) in the repo root; us
 
 | My purpose | Use this | Why |
 |---|---|---|
+| ★ **Phone app deployment (latest, recommended)** | `deploy_dropout/` | Trained on 20 subjects + phone skeletons; phone LOSO r 0.785 with load, 0.727 without |
 | **Deployment / demo for these 10 known people** | `personalized/from_loso/` | Most accurate after personalization (main muscle r≈0.83) |
 | **Deployment / demo for a brand-new person** | any fold of `loso_zeroshot/` | The only models that have not seen the new person |
 | **Reporting “cross-subject generalization” in a paper** | `loso_zeroshot/` | ★ **The only honest baseline** |
@@ -21,6 +22,24 @@ Path constants are all defined in [`paths.py`](../paths.py) in the repo root; us
 > 🚫 **Do not use `global/` or `personalized/from_global/` to report generalization scores.**
 > They saw (almost) every subject during training; evaluating them is like using past exam papers as the exam.
 > Measured, this alone is worth **+0.081** (main muscle r, p=0.0009).
+
+---
+
+## ★ `deploy_dropout/` — deployment model for the app (Nov 2026)
+
+Conv1D whose input is 8 skeleton features + 2 load columns + a missing flag (11 per frame). During training the load
+is masked with probability 0.3, so **it still works when the user does not enter a load**.
+Training data: OpenCap skeletons S01–S20 + MediaPipe phone skeletons S01–S10; about 21k parameters.
+
+| File | Description |
+|---|---|
+| `dropout_conv8_load.keras` / `.tflite` | The model (TFLite verified against Keras, max difference < 1e-6) |
+| `scaler_ts.pkl`, `scaler_static.pkl` | sklearn StandardScaler |
+| `deploy_config.json` | Column order, scaler mean/scale, load formulas — non-Python apps can preprocess from this alone |
+| `README.md` | Guide for the app side |
+
+* Produced by [`experiments/train_deploy_dropout.py`](../experiments/train_deploy_dropout.py)
+* It has seen every subject → **do not evaluate with it**; quote the LOSO numbers from `experiments/phone_load_10.py`.
 
 ---
 
@@ -76,7 +95,7 @@ This is the source of every generalization number in this project, and the start
 > ⚠️ **Do not cite S09's synergist (0.038)** — that channel likely had poor electrode contact
 > (coefficient of variation 0.31 vs 0.65–0.92 for everyone else). S09's **main muscle quality is normal** and is fully retained.
 > ⚠️ The table above is from a **single run**. There is a ±0.02 drift across runs; in a paper cite the multi-seed
-> 0.735 ± 0.013, see the [results table in the root README](../README.md#-main-results).
+> 0.735 ± 0.013, see the [results table in the root README](../README.md#-main-results-10-subjects-aug-2026).
 
 ---
 

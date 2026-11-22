@@ -10,6 +10,32 @@ On Windows, always set `PYTHONIOENCODING=utf-8`.
 
 ---
 
+## 🧪 20-subject experiments (Nov 2026, latest)
+
+Each script starts with a one-line English summary; detailed comments are in Chinese.
+Result CSVs are not included in this repo — rerunning a script regenerates them under `results/`.
+
+| Program | Question answered | Conclusion |
+|---|---|---|
+| `loso_10v20_compare.py` | Does going from 10 to 20 subjects help? | The original 10 improve; the new 10 are harder |
+| **`fair_and_curve_20.py`** | Fair Conv1D-8 vs ST-GCN comparison + learning curve | Tie (0.753 vs 0.755); ceiling ≈ 0.77 |
+| `ensemble_20.py` | Ensemble of the two? | 0.774, beats both |
+| **`load_moment_20.py`** | Add the known load / joint moments? | ★ Load 0.793 (p = 0.004); moments 0.778 |
+| `run_load20.py` / `.bat` | Supervised one-click runner for the above | — |
+| `ensemble_load.py` | Load model + ST-GCN ensemble? | +0.007, not significant |
+| `load_curve_20.py` | Learning curve with load | Wins at every N; 8 subjects already beat 0.774 |
+| `load_sensitivity.py` | Wrong or missing load? | 1RM ±30% is fine; missing load drops to 0.716 |
+| **`load_dropout_20.py`** | Randomly mask the load during training | 0.795 with load, 0.762 without |
+| **`phone_load_10.py`** | Does it still work on a single phone's skeleton? | 0.704 → 0.785 (10/10 subjects) |
+| **`train_deploy_dropout.py`** | Build the deployment model for the app | → `models/deploy_dropout/` |
+| `train_global_20.py` | 20-subject global ST-GCN | weights not included |
+| `fatigue_mdf_check.py`, `velocity_loss_check.py` | Is fatigue modelling feasible? | No within-set MDF drop, no velocity loss → not feasible |
+
+> On an 8 GB laptop GPU, several concurrent GPU processes ran slower overall and occasionally crashed with
+> `CUDA_ERROR_ILLEGAL_ADDRESS`; **run one process at a time**.
+
+---
+
 ## 🧪 Main paper experiments
 
 | Program | Question answered | Conclusion | Output |

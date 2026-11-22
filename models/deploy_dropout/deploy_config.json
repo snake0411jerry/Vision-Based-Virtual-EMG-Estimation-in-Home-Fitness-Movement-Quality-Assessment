@@ -1,0 +1,167 @@
+{
+  "model": "Conv1D, 8 skeleton features + load + load dropout (P = 0.3)",
+  "files": {
+    "keras": "dropout_conv8_load.keras",
+    "tflite": "dropout_conv8_load.tflite",
+    "scaler_ts": "scaler_ts.pkl",
+    "scaler_static": "scaler_static.pkl"
+  },
+  "fps": 60,
+  "window_size": 40,
+  "step_size": 5,
+  "inputs": {
+    "ts_input": {
+      "shape": [
+        null,
+        40,
+        11
+      ],
+      "columns": [
+        "Knee_Angle_norm",
+        "Ankle_Y_norm",
+        "Knee_Y_norm",
+        "Toe_Y_norm",
+        "Knee_X_norm",
+        "Shoulder_Y_norm",
+        "Knee_Ankle_Ratio_norm",
+        "Trunk_Lean_Angle_norm",
+        "Load_pct1RM",
+        "Load_per_BW",
+        "Load_missing_flag"
+      ],
+      "scaled_columns": [
+        "Knee_Angle_norm",
+        "Ankle_Y_norm",
+        "Knee_Y_norm",
+        "Toe_Y_norm",
+        "Knee_X_norm",
+        "Shoulder_Y_norm",
+        "Knee_Ankle_Ratio_norm",
+        "Trunk_Lean_Angle_norm",
+        "Load_pct1RM",
+        "Load_per_BW"
+      ],
+      "scaler_mean": [
+        0.7419800363051179,
+        -0.5275275294452643,
+        -0.23909174347560821,
+        -0.5685939756719338,
+        0.10868007828592016,
+        0.3476017918239186,
+        0.8746264653797643,
+        0.06816791106700472,
+        0.2727703084054178,
+        0.3509409421551808
+      ],
+      "scaler_scale": [
+        0.20585565792599267,
+        0.10705856998545808,
+        0.0910844354226569,
+        0.10804452877247114,
+        0.10442902859544337,
+        0.04327733061518112,
+        0.19676721616942258,
+        0.0588696132070751,
+        0.2869280102677265,
+        0.41453339954469337
+      ]
+    },
+    "static_input": {
+      "shape": [
+        null,
+        4
+      ],
+      "columns": [
+        "Subj_Age",
+        "Subj_Height_m",
+        "Subj_Weight_norm",
+        "Subj_Gender"
+      ],
+      "scaler_mean": [
+        0.21470680616732024,
+        1.695920230411191,
+        0.654797122799026,
+        0.47482081782747815
+      ],
+      "scaler_scale": [
+        0.010226276107824164,
+        0.09068003566779029,
+        0.10738546666562387,
+        0.4993656063297942
+      ]
+    }
+  },
+  "static_raw": {
+    "Subj_Age": "age (years) / 100",
+    "Subj_Height_m": "height (cm) / 100",
+    "Subj_Weight_norm": "body weight (kg) / 100",
+    "Subj_Gender": "male = 1, female = 0"
+  },
+  "load_raw": {
+    "Load_pct1RM": "total set load in kg (INCLUDING the 20 kg bar) / 1RM in kg; bodyweight squat = 0",
+    "Load_per_BW": "total set load in kg (including the bar) / body weight in kg; bodyweight squat = 0",
+    "if_1RM_unknown": "heaviest set of about 10 reps to failure -> 1RM ~ that load / 0.7"
+  },
+  "load_missing": "Load not entered: standardize as usual, then set the two STANDARDIZED load columns to 0 and the flag to 1. When the load is entered the flag is 0.",
+  "outputs": {
+    "columns": [
+      "EMG_Main_MVC",
+      "EMG_Compass_MVC"
+    ],
+    "unit": "activation envelope normalized to the subject maximum (about 0-1), one value per window (its last frame)"
+  },
+  "feature_source": "FEATURES_8 are computed from the TRC skeleton by pipeline/Features_insert_FIXED.py (MediaPipe goes through the same formulas via pipeline/build_combined_mediapipe.py)",
+  "train": {
+    "opencap_subjects": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S06",
+      "S07",
+      "S08",
+      "S09",
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15",
+      "S16",
+      "S17",
+      "S18",
+      "S19",
+      "S20"
+    ],
+    "mediapipe_subjects": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S06",
+      "S07",
+      "S08",
+      "S09",
+      "S10"
+    ],
+    "seed": 42,
+    "epochs": 30,
+    "batch_size": 32,
+    "n_windows": 107016,
+    "n_params": 21346
+  },
+  "loso_performance_phone": {
+    "r_main_load_given": 0.785,
+    "r_main_load_missing": 0.727,
+    "r_main_skeleton_only_model": 0.704,
+    "source": "experiments/phone_load_10.py (3 seeds x S01-S10, leave-one-subject-out)"
+  },
+  "self_check_in_sample_r_main": {
+    "S01_true": 0.882,
+    "S01_missing": 0.842,
+    "S15_true": 0.908,
+    "S15_missing": 0.906
+  }
+}

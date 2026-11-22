@@ -16,6 +16,14 @@ Naming conventions:
 
 ---
 
+## 📁 20-subject outputs (Nov 2026)
+
+Result CSVs are not shipped; rerun the scripts in [`../experiments/`](../experiments/) to regenerate them.
+Included here: `curve20.png` (learning curve) and the text summaries `load_curve/summary_out.txt` and
+`load_dropout/summary_out.txt`. Headline numbers are in the [root README](../README.md#-latest-results-20-subjects-nov-2026).
+
+---
+
 ## ⭐ The most frequently used
 
 | File | Content | Produced by |

@@ -11,6 +11,7 @@ each program's docstring lists what was changed and why. **The old versions are 
 ## 🔄 Execution order
 
 ```
+0. align_trc_by_led.py            (new data) trim TRC to the EMG segments using the LED in the videos, see below
 1. emg_process_segment_FIXED.py   Raw EMG → filtering/rectification/envelope, outputs dual tracks at 60FPS and 1000Hz
 2. MAX_MVC_FIXED.py               compute the MVC reference (used by the next step)
 3. create subjects.csv            ★ contains personal data, must be created yourself, see below
@@ -44,6 +45,7 @@ python pipeline/emg_process_segment_FIXED.py
 | `phase2_finetune_FIXED.py` | Personalized fine-tuning (starting point = global model) |
 | `eval_utils.py` | **Shared evaluation utilities**: leak-proof splitting, windowing, Pearson r, nRMSE, compensation thresholds |
 | `subjects.example.csv` | Column template for `subjects.csv` |
+| `align_trc_by_led.py` | **Alignment of new data**: finds the waist-pack LED in both cameras' raw videos, pairs each trial with its EMG segment in recording order and trims `MarkerData/*.trc`. Outputs `alignment_report.csv`, `alignment_check.png`, `alignment_frames.pdf` and prints the `segment_ids` / `trc_order` for `Features_insert_FIXED.py` |
 | `align_mediapipe_trc.py`, `build_combined_mediapipe.py`, `build_combined_trunkfix.py` | Single-camera (MediaPipe) experiment data; see [`../experiments/MEDIAPIPE_EXPERIMENT.md`](../experiments/MEDIAPIPE_EXPERIMENT.md) |
 
 ### `eval_utils.py` — the shared copy
@@ -63,6 +65,23 @@ putting an end to “three generations of copies each drifting apart”.
 > Once rep segmentation is done, rerun it with “peak per rep”, and revisit the thresholds then.
 
 ---
+
+### `align_trc_by_led.py` — first step for newly collected data
+
+```powershell
+python pipeline/align_trc_by_led.py "<collection-day folder>"            # analyze only, no files changed
+python pipeline/align_trc_by_led.py "<collection-day folder>" --apply    # trim after checking alignment_frames.pdf
+```
+
+* Replaces the manual 0624code workflow (marking the LED per trial in FindFrame.py and trimming TRC by hand).
+* The LED is found in the raw `.mov`; the waist-pack region comes from OpenCap's own 2D keypoints (mirror reflections
+  excluded) and is converted back to TRC frame numbers. Videos placed in swapped camera folders are detected automatically.
+* Pairing follows the recording order (read from the `.mov` capture time) — EMG segments recorded the same day often
+  differ in length by only 0.2 s.
+* **Always review `alignment_frames.pdf`**: one page per trial, 2 cameras × 4 frames around the start and end.
+* Trials where the video stops before the EMG (LED still on in the last frame) are not trimmed and are flagged for a manual decision.
+* The first `--apply` backs up to `MarkerData_original/`; it is safe to rerun. Locally reconstructed TRC files
+  (first line contains `LOCAL RECONSTRUCTION`) are never touched. Unlike the old manual trims, the header NumFrames is updated.
 
 ## 🔒 `subjects.csv` (contains personal data, not version-controlled)
 

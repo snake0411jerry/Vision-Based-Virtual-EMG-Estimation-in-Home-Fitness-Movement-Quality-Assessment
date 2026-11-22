@@ -8,7 +8,7 @@ with the goal of **not needing electrodes** at deployment.
 > ⚠️ "Activation" here is not a true %MVC (this project has no MVC recordings);
 > it is normalized to **the maximum activation observed for that subject**. See item 6 of [Read before citing numbers](#-read-before-citing-numbers) for details and reasons.
 
-Two muscles are measured: the main muscle (Raw0) and a synergist (Raw1). The data are 10 subjects, squats, multiple loads, 89 segments in total.
+Two muscles are measured: the main muscle (Raw0) and a synergist (Raw1). The data are **20 subjects**, squats, multiple loads, 157 segments in total (the first 10 subjects, 89 segments, also have a single-phone MediaPipe skeleton). See [Latest results](#-latest-results-20-subjects-nov-2026).
 The project contains Teensy 4.1 acquisition firmware, Python signal preprocessing, and the deep learning models with the full set of experiments.
 
 > 📦 **About this repository.** This is the English edition of the project's code. It ships the code, documentation, figures and
@@ -21,6 +21,7 @@ The project contains Teensy 4.1 acquisition firmware, Python signal preprocessin
 
 | I want to… | Go here | Notes |
 |---|---|---|
+| **Put the model in a phone app** | [`models/deploy_dropout/`](models/deploy_dropout/) | ★ Load-dropout model, with TFLite and preprocessing guide |
 | **Run inference with the trained models** | [`models/global/`](models/) | See [Using the trained models directly](#using-the-trained-models-directly) |
 | **Know which models exist and how they differ** | [`models/README.md`](models/README.md) | Grouped by **training method**, with scores and intended use for each |
 | **See the numbers for an experiment** | [`results/README.md`](results/README.md) | Which program produces each output and how to read it |
@@ -46,6 +47,7 @@ sEMG-Teensy-Collector/
 ├── experiments/          paper experiments and diagnostics (only .py; all outputs go to results/)
 ├── results/              experiment outputs: figures (result CSVs are not included in this repo)
 ├── models/               ★ trained models, grouped by "training method"
+│   ├── deploy_dropout/       ★ deployment model for the app (load dropout, 20 subjects + phone skeleton)
 │   ├── global/               global training (everyone trained together)
 │   ├── loso_zeroshot/        each LOSO fold (the only honest cross-subject baseline)
 │   ├── personalized/         personalized fine-tuning
@@ -133,7 +135,32 @@ Use `models/loso_zeroshot/` instead; see [Read before citing numbers](#-read-bef
 
 ---
 
-## 📊 Main results
+## 📊 Latest results (20 subjects, Nov 2026)
+
+20 subjects, 157 squat recordings. Every number is **leave-one-subject-out** (LOSO) over several random seeds,
+with paired tests across the 20 subjects. Main-muscle Pearson r unless noted.
+
+| Finding | Main-muscle r | Script |
+|---|---|---|
+| A small Conv1D on 8 reliable skeleton features ties ST-GCN | 0.753 vs 0.755 (p = 0.81) | `experiments/fair_and_curve_20.py` |
+| Skeleton-only models hit a ceiling: the learning curve saturates | r∞ ≈ 0.774 | `experiments/fair_and_curve_20.py` |
+| Ensemble of the two | 0.774 (19/20 subjects improve) | `experiments/ensemble_20.py` |
+| ★ **Adding the known barbell load** (%1RM, load / body weight) breaks the ceiling | **0.750 → 0.793** (p = 0.004) | `experiments/load_moment_20.py` |
+| Load-model learning curve: 8 training subjects already beat the skeleton-only ceiling | N = 8: 0.777; N = 16: 0.797 | `experiments/load_curve_20.py` |
+| 1RM errors of ±30% barely matter, but a missing load hurts the plain load model | missing: 0.716 (< skeleton-only 0.751) | `experiments/load_sensitivity.py` |
+| ★ **Load dropout**: one model that works with or without the load | with: 0.795, without: 0.762 | `experiments/load_dropout_20.py` |
+| ★ **A single phone** (MediaPipe skeleton, S01–S10) | skeleton only 0.704 → **with load 0.785** (10/10 subjects, p = 0.001); without load 0.727 | `experiments/phone_load_10.py` |
+| Fatigue: no within-set drop in median frequency and no velocity loss → not feasible with this data | — | `experiments/fatigue_mdf_check.py`, `velocity_loss_check.py` |
+
+**Deployment (for the app):** [`models/deploy_dropout/`](models/deploy_dropout/) — the load-dropout model (Keras + TFLite),
+trained on all data. See that folder's README for preprocessing. Quote the LOSO numbers above, not this model's own fit
+(phone: 0.785 with load, 0.727 without).
+
+> Scripts added in November 2026 start with an English summary; their detailed comments are in Chinese.
+
+---
+
+## 📊 Main results (10 subjects, Aug 2026)
 
 10 subjects, squats, two channels (main muscle and synergist). **After the coordinate-axis fixes, 16-dim features**.
 
